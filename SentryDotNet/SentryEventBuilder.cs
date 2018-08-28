@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json.Linq;
+
 namespace SentryDotNet
 {
     /// <summary>
@@ -160,6 +162,17 @@ namespace SentryDotNet
             }
 
             Exception = ConvertException(ex);
+            if (Extra != null)
+            {
+                JObject.FromObject(Extra)
+                    .Merge(
+                        JObject.FromObject(ex.Data),
+                        new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Union });
+            }
+            else
+            {
+                Extra = ex.Data;
+            }
         }
         
         private static List<ISentryException> ConvertException(Exception ex)
