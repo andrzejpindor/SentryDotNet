@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Newtonsoft.Json.Linq;
 
 namespace SentryDotNet
@@ -108,7 +107,7 @@ namespace SentryDotNet
         /// A trail of breadcrumbs, if any, that led up to the event creation.
         /// </summary>
         public List<ISentryBreadcrumb> Breadcrumbs { get; set; } = new List<ISentryBreadcrumb>();
-        
+
         /// <summary>
         /// The HTTP request context, if any.
         /// </summary>
@@ -132,21 +131,21 @@ namespace SentryDotNet
             {
                 Level = SeverityLevel.Info;
             }
-            
+
             Message = message.ToString();
-            Fingerprint = new [] { message.Format, Level.ToString() };
+            Fingerprint = new[] {message.Format, Level.ToString()};
         }
-        
+
         public void SetMessage(object message)
         {
             if (Level == null)
             {
                 Level = SeverityLevel.Info;
             }
-            
+
             Message = message.ToString();
         }
-        
+
         public void SetException(Exception ex)
         {
             if (Culprit == null)
@@ -164,17 +163,17 @@ namespace SentryDotNet
             Exception = ConvertException(ex);
             if (Extra != null)
             {
-                JObject.FromObject(Extra)
-                    .Merge(
-                        JObject.FromObject(ex.Data),
-                        new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Union });
+                JsonMergeSettings settings = new JsonMergeSettings {MergeArrayHandling = MergeArrayHandling.Union};
+                JObject originalExtra = JObject.FromObject(Extra);
+                originalExtra.Merge(JObject.FromObject(ex.Data), settings);
+                Extra = originalExtra;
             }
             else
             {
                 Extra = ex.Data;
             }
         }
-        
+
         private static List<ISentryException> ConvertException(Exception ex)
         {
             var sentryException = new SentryException
@@ -185,7 +184,7 @@ namespace SentryDotNet
                 Value = ex.Message
             };
 
-            return new[] { sentryException }
+            return new[] {sentryException}
                 .Concat(ex.InnerException == null ? new List<ISentryException>() : ConvertException(ex.InnerException))
                 .ToList();
         }
